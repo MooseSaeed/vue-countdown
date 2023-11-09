@@ -1,7 +1,4 @@
-import {
-  defineComponent,
-  h,
-} from 'vue';
+import { defineComponent, h } from 'vue';
 
 const MILLISECONDS_SECOND = 1000;
 const MILLISECONDS_MINUTE = 60 * MILLISECONDS_SECOND;
@@ -76,12 +73,7 @@ export default defineComponent({
     },
   },
 
-  emits: [
-    EVENT_ABORT,
-    EVENT_END,
-    EVENT_PROGRESS,
-    EVENT_START,
-  ],
+  emits: [EVENT_ABORT, EVENT_END, EVENT_PROGRESS, EVENT_START],
 
   data() {
     return {
@@ -125,7 +117,9 @@ export default defineComponent({
      * @returns {number} The computed value.
      */
     hours(): number {
-      return Math.floor((this.totalMilliseconds % MILLISECONDS_DAY) / MILLISECONDS_HOUR);
+      return Math.floor(
+        (this.totalMilliseconds % MILLISECONDS_DAY) / MILLISECONDS_HOUR,
+      );
     },
 
     /**
@@ -133,7 +127,9 @@ export default defineComponent({
      * @returns {number} The computed value.
      */
     minutes(): number {
-      return Math.floor((this.totalMilliseconds % MILLISECONDS_HOUR) / MILLISECONDS_MINUTE);
+      return Math.floor(
+        (this.totalMilliseconds % MILLISECONDS_HOUR) / MILLISECONDS_MINUTE,
+      );
     },
 
     /**
@@ -141,7 +137,9 @@ export default defineComponent({
      * @returns {number} The computed value.
      */
     seconds(): number {
-      return Math.floor((this.totalMilliseconds % MILLISECONDS_MINUTE) / MILLISECONDS_SECOND);
+      return Math.floor(
+        (this.totalMilliseconds % MILLISECONDS_MINUTE) / MILLISECONDS_SECOND,
+      );
     },
 
     /**
@@ -205,11 +203,21 @@ export default defineComponent({
   },
 
   mounted() {
-    document.addEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
+    if (document) {
+      document.addEventListener(
+        EVENT_VISIBILITY_CHANGE,
+        this.handleVisibilityChange,
+      );
+    }
   },
 
   beforeUnmount() {
-    document.removeEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
+    if (document) {
+      document.removeEventListener(
+        EVENT_VISIBILITY_CHANGE,
+        this.handleVisibilityChange,
+      );
+    }
     this.pause();
   },
 
@@ -239,7 +247,7 @@ export default defineComponent({
         this.$emit(EVENT_START);
       }
 
-      if (document.visibilityState === 'visible') {
+      if (document && document.visibilityState === 'visible') {
         this.continue();
       }
     },
@@ -270,10 +278,9 @@ export default defineComponent({
           const range = now - init;
 
           if (
-            range >= delay
-
+            range >= delay ||
             // Avoid losing time about one second per minute (now - prev ≈ 16ms) (#43)
-            || range + ((now - prev) / 2) >= delay
+            range + (now - prev) / 2 >= delay
           ) {
             this.progress();
           } else {
@@ -403,35 +410,44 @@ export default defineComponent({
      * @private
      */
     handleVisibilityChange() {
-      switch (document.visibilityState) {
-        case 'visible':
-          this.update();
-          this.continue();
-          break;
+      if (document) {
+        switch (document.visibilityState) {
+          case 'visible':
+            this.update();
+            this.continue();
+            break;
 
-        case 'hidden':
-          this.pause();
-          break;
+          case 'hidden':
+            this.pause();
+            break;
 
-        default:
+          default:
+        }
       }
     },
   },
 
   render() {
-    return h(this.tag, this.$slots.default ? [
-      this.$slots.default(this.transform({
-        days: this.days,
-        hours: this.hours,
-        minutes: this.minutes,
-        seconds: this.seconds,
-        milliseconds: this.milliseconds,
-        totalDays: this.totalDays,
-        totalHours: this.totalHours,
-        totalMinutes: this.totalMinutes,
-        totalSeconds: this.totalSeconds,
-        totalMilliseconds: this.totalMilliseconds,
-      })),
-    ] : undefined);
+    return h(
+      this.tag,
+      this.$slots.default
+        ? [
+          this.$slots.default(
+            this.transform({
+              days: this.days,
+              hours: this.hours,
+              minutes: this.minutes,
+              seconds: this.seconds,
+              milliseconds: this.milliseconds,
+              totalDays: this.totalDays,
+              totalHours: this.totalHours,
+              totalMinutes: this.totalMinutes,
+              totalSeconds: this.totalSeconds,
+              totalMilliseconds: this.totalMilliseconds,
+            }),
+          ),
+        ]
+        : undefined,
+    );
   },
 });
